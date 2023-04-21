@@ -4,6 +4,7 @@ from django.views import generic
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
 from .models import Hall
+from .forms import VideoForm
 
 
 # Create your views here.
@@ -13,6 +14,11 @@ def home(request):
 #dashboard
 def dashboard(request):
     return render(request,'halls/dashboard.html')
+
+#add video
+def add_video(request,pk):
+    form = VideoForm() #create a form
+    return render(request, 'halls/add_video.html',{'form':form}) #passed the obj form to add_video.html
 
 #class based view for SignUp
 class SignUp(generic.CreateView):
