@@ -1,0 +1,9 @@
+{% extends 'halls/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+    {% comment %} able to call hall object cuz class DetailView passed the Hall object {% endcomment %}
+    <h1>{{ hall.title }}</h1>
+    <h4 class="text-muted"> {{ hall.user.username}}</h4>
+</div>
+{% endblock %}

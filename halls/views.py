@@ -10,6 +10,10 @@ from .models import Hall
 def home(request):
     return render(request,'halls/home.html')
 
+#dashboard
+def dashboard(request):
+    return render(request,'halls/dashboard.html')
+
 #class based view for SignUp
 class SignUp(generic.CreateView):
     form_class = UserCreationForm
@@ -17,7 +21,7 @@ class SignUp(generic.CreateView):
     template_name = 'registration/signup.html'
 
     '''
-    purpose : Auto Login after SignUp (no need to login again after Sign Up)
+    purpose : Auto Login after Sign Up (no need to login again after Sign Up)
     '''
     def form_valid(self,form):
         view = super(SignUp, self).form_valid(form) #if the new Sign Up form is valid
@@ -26,8 +30,8 @@ class SignUp(generic.CreateView):
         login(self.request, user) #let user login 
         return view #return to the login view 
 
-
-#class based view for CreateHall
+#CRUD of Hall
+#class based view for CreateHall - C
 class CreateHall(generic.CreateView):
     model = Hall #use Hall model
     fields = ['title']  #in Hall model only have one field
@@ -41,3 +45,8 @@ class CreateHall(generic.CreateView):
         form.instance.user = self.request.user  #get the user
         super(CreateHall,self).form_valid(form) #if it is a valid user, admin can check which user create which hall object
         return redirect('home') #return home
+
+#class based view for DetailView - R
+class DetailHall(generic.DeleteView):
+    model = Hall  #pass the model object to template
+    template_name = 'halls/detail_hall.html'
