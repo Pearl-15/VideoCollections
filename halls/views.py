@@ -36,7 +36,7 @@ class CreateHall(generic.CreateView):
     model = Hall #use Hall model
     fields = ['title']  #in Hall model only have one field
     template_name = 'halls/create_hall.html'  #go to the template that have form
-    success_url = reverse_lazy('home') #after success submitted redirect to home
+    success_url = reverse_lazy('dashboard') #after success submitted redirect to home
 
     '''
     purpose : To Let Admin check which user create which hall object
@@ -46,7 +46,20 @@ class CreateHall(generic.CreateView):
         super(CreateHall,self).form_valid(form) #if it is a valid user, admin can check which user create which hall object
         return redirect('home') #return home
 
-#class based view for DetailView - R
+#class based view for DetailHall - R
 class DetailHall(generic.DeleteView):
     model = Hall  #pass the model object to template
     template_name = 'halls/detail_hall.html'
+
+#class based view for UpdateHall - U
+class UpdateHall(generic.UpdateView):
+    model = Hall #passed the Hall object to template
+    template_name = 'halls/update_hall.html'
+    fields = ['title']  #field that want to update
+    success_url = reverse_lazy('dashboard')  #after updated successfully redirect back to dashboard
+
+#class based view for DeleteHall - D
+class DeleteHall(generic.DeleteView):
+    model = Hall #passed the Hall object to template
+    template_name = 'halls/delete_hall.html'
+    success_url = reverse_lazy('dashboard') #after successfully deleted redirect back to dashboard
