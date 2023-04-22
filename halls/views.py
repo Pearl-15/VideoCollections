@@ -5,8 +5,13 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
 from .models import Hall, Video
 from .forms import VideoForm, SearchForm
+from django.http import Http404
+from django.forms.utils import ErrorList
+import urllib
+import requests
 
 
+YOUTUBE_API_KEY = 'AIzaSyCqohXaqd0zrBcdwrhXN-R9Oi4YxOp8oEo'
 # Create your views here.
 def home(request):
     return render(request,'halls/home.html')
@@ -19,17 +24,37 @@ def dashboard(request):
 def add_video(request,pk):
     form = VideoForm() #create a form if it is GET 
     search_form = SearchForm()
+    hall = Hall.objects.get(pk=pk) #get the current hall
+    if not hall.user ==request.user: #if not correct user
+        raise Http404 #return 404
+    
 
     #if this is the POST 
     if request.method == 'POST':
         filled_form = VideoForm(request.POST) #get the form object from template
         if filled_form.is_valid(): #if filled_form is valid
             video = Video() #create new Video object
+            video.hall = hall #get the hall id 
             video.url = filled_form.cleaned_data['url'] #put the filled_form['url'] into video obj. url
-            video.title = filled_form.cleaned_data['title']
-            video.youtube_id = filled_form.cleaned_data['youtube_id']
-            video.hall = Hall.objects.get(pk=pk) #get the hall primary key
-            video.save() #save the object into database
+            parsed_url = urllib.parse.urlparse(video.url) #parse the url form filled_form
+            video_id = urllib.parse.parse_qs(parsed_url.query).get('v') #get the query of you tube id (eg : https://www.youtube.com/watch?v=YouTubeId) get the YouTubeId
+            if video_id: #if url is correct and can get video_id
+                video.youtube_id =video_id[0]
+                response = requests.get(f'https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id={ video_id[0] }&key={  YOUTUBE_API_KEY }')
+                json = response.json()
+                title = json['items'][0]['snippet']['title']
+                print(title)
+                video.title = title
+                video.save() #save the object into database
+                return redirect('detail_hall',pk) #after added video redirect to detail_hall
+            
+            else: #if url is not correct and cannot get video_id
+ 
+                # if filled_form.has_error('url'):
+                #     errors = filled_form['url'].errors
+                #     errors.append('Need to be a YouTube URL')
+                errors = filled_form._errors.setdefault('url',ErrorList())
+                errors.append('Need to be a You Tube URL')
 
     return render(request, 'halls/add_video.html',{'form':form, 'search_form': search_form}) #passed the obj form to add_video.html (if it is GET)
 
