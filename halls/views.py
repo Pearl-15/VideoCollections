@@ -3,7 +3,7 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
-from .models import Hall
+from .models import Hall, Video
 from .forms import VideoForm
 
 
@@ -15,10 +15,22 @@ def home(request):
 def dashboard(request):
     return render(request,'halls/dashboard.html')
 
-#add video
+#add video (one method can do both GET and POST , default is GET, only put condtion == POST, will do the POST portion)
 def add_video(request,pk):
-    form = VideoForm() #create a form
-    return render(request, 'halls/add_video.html',{'form':form}) #passed the obj form to add_video.html
+    form = VideoForm() #create a form if it is GET 
+
+    #if this is the POST 
+    if request.method == 'POST':
+        filled_form = VideoForm(request.POST) #get the form object from template
+        if filled_form.is_valid(): #if filled_form is valid
+            video = Video() #create new Video object
+            video.url = filled_form.cleaned_data['url'] #put the filled_form['url'] into video obj. url
+            video.title = filled_form.cleaned_data['title']
+            video.youtube_id = filled_form.cleaned_data['youtube_id']
+            video.hall = Hall.objects.get(pk=pk) #get the hall primary key
+            video.save() #save the object into database
+
+    return render(request, 'halls/add_video.html',{'form':form}) #passed the obj form to add_video.html (if it is GET)
 
 #class based view for SignUp
 class SignUp(generic.CreateView):
