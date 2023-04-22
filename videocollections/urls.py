@@ -35,4 +35,6 @@ urlpatterns = [
     path('halloffame/<int:pk>/delete',views.DeleteHall.as_view(),name='delete_hall'),
     #Video (method level views)
     path('halloffame/<int:pk>/addvideo',views.add_video, name='add_video'),
+    path('video/search',views.video_search, name='video_search'),  #this url won't bind with model so it is good to use method level views
+
 ]

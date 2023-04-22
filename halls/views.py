@@ -5,13 +5,14 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
 from .models import Hall, Video
 from .forms import VideoForm, SearchForm
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.forms.utils import ErrorList
 import urllib
 import requests
+import os
 
+YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 
-YOUTUBE_API_KEY = 'AIzaSyCqohXaqd0zrBcdwrhXN-R9Oi4YxOp8oEo'
 # Create your views here.
 def home(request):
     return render(request,'halls/home.html')
@@ -56,7 +57,16 @@ def add_video(request,pk):
                 errors = filled_form._errors.setdefault('url',ErrorList())
                 errors.append('Need to be a You Tube URL')
 
-    return render(request, 'halls/add_video.html',{'form':form, 'search_form': search_form}) #passed the obj form to add_video.html (if it is GET)
+    return render(request, 'halls/add_video.html',{'form':form, 'search_form': search_form, 'hall': hall}) #passed the obj form to add_video.html (if it is GET)
+
+#search video from youtube 
+def video_search(request):
+    search_form = SearchForm(request.GET) #get the SearchForm from frontend 
+    if search_form.is_valid(): #if search_form is valid
+        encoded_search_term = urllib.parse.quote(search_form.cleaned_data['search_term'])
+        response = requests.get(f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q={ encoded_search_term }&key={ YOUTUBE_API_KEY }')    
+        return JsonResponse(response.json())#Response from server
+    return JsonResponse({'error': 'Not able to validate form'})#Response from server
 
 #class based view for SignUp
 class SignUp(generic.CreateView):
