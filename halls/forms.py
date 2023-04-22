@@ -15,3 +15,6 @@ class VideoForm(forms.ModelForm):
         #make customize label for the form
         labels = {'youtube_id':'YouTube ID'}
 
+class SearchForm(forms.Form):
+    search_term = forms.CharField(max_length=255, label='Search for Videos:')
+

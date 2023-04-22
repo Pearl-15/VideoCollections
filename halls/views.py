@@ -4,7 +4,7 @@ from django.views import generic
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
 from .models import Hall, Video
-from .forms import VideoForm
+from .forms import VideoForm, SearchForm
 
 
 # Create your views here.
@@ -18,6 +18,7 @@ def dashboard(request):
 #add video (one method can do both GET and POST , default is GET, only put condtion == POST, will do the POST portion)
 def add_video(request,pk):
     form = VideoForm() #create a form if it is GET 
+    search_form = SearchForm()
 
     #if this is the POST 
     if request.method == 'POST':
@@ -30,7 +31,7 @@ def add_video(request,pk):
             video.hall = Hall.objects.get(pk=pk) #get the hall primary key
             video.save() #save the object into database
 
-    return render(request, 'halls/add_video.html',{'form':form}) #passed the obj form to add_video.html (if it is GET)
+    return render(request, 'halls/add_video.html',{'form':form, 'search_form': search_form}) #passed the obj form to add_video.html (if it is GET)
 
 #class based view for SignUp
 class SignUp(generic.CreateView):
