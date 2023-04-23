@@ -68,6 +68,15 @@ def video_search(request):
         return JsonResponse(response.json())#Response from server
     return JsonResponse({'error': 'Not able to validate form'})#Response from server
 
+
+#delete video
+class DeleteVideo(generic.DeleteView):
+    model = Video
+    template_name = 'halls/delete_video.html'
+    success_url = reverse_lazy('dashboard')
+
+
+
 #class based view for SignUp
 class SignUp(generic.CreateView):
     form_class = UserCreationForm
