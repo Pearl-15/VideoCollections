@@ -19,7 +19,11 @@ def home(request):
 
 #dashboard
 def dashboard(request):
-    return render(request,'halls/dashboard.html')
+    
+    halls = Hall.objects.filter(user=request.user)#get the halls from current user 
+
+
+    return render(request,'halls/dashboard.html',{'halls':halls})
 
 #add video (one method can do both GET and POST , default is GET, only put condtion == POST, will do the POST portion)
 def add_video(request,pk):
@@ -107,7 +111,7 @@ class CreateHall(generic.CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user  #get the user
         super(CreateHall,self).form_valid(form) #if it is a valid user, admin can check which user create which hall object
-        return redirect('home') #return home
+        return redirect('dashboard') #return home
 
 #class based view for DetailHall - R
 class DetailHall(generic.DeleteView):
