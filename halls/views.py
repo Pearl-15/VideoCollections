@@ -15,7 +15,10 @@ YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 
 # Create your views here.
 def home(request):
-    return render(request,'halls/home.html')
+    #get the last 3 of recent halls 
+    recent_halls = Hall.objects.all().order_by('-id')[:3]
+    
+    return render(request,'halls/home.html',{'recent_halls':recent_halls})
 
 #dashboard
 def dashboard(request):
