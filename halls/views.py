@@ -3,10 +3,13 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
+
 from .models import Hall, Video
 from .forms import VideoForm, SearchForm
 from django.http import Http404, JsonResponse
 from django.forms.utils import ErrorList
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 import urllib
 import requests
 import os
@@ -16,11 +19,12 @@ YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 # Create your views here.
 def home(request):
     #get the last 3 of recent halls 
-    recent_halls = Hall.objects.all().order_by('-id')[:3]
-    
+    recent_halls = Hall.objects.all().order_by('-id')[:2]
+
     return render(request,'halls/home.html',{'recent_halls':recent_halls})
 
 #dashboard
+@login_required  #must login to see the dashboard
 def dashboard(request):
     
     halls = Hall.objects.filter(user=request.user)#get the halls from current user 
@@ -29,6 +33,7 @@ def dashboard(request):
     return render(request,'halls/dashboard.html',{'halls':halls})
 
 #add video (one method can do both GET and POST , default is GET, only put condtion == POST, will do the POST portion)
+@login_required
 def add_video(request,pk):
     form = VideoForm() #create a form if it is GET 
     search_form = SearchForm()
@@ -67,6 +72,7 @@ def add_video(request,pk):
     return render(request, 'halls/add_video.html',{'form':form, 'search_form': search_form, 'hall': hall}) #passed the obj form to add_video.html (if it is GET)
 
 #search video from youtube 
+@login_required
 def video_search(request):
     search_form = SearchForm(request.GET) #get the SearchForm from frontend 
     if search_form.is_valid(): #if search_form is valid
@@ -77,17 +83,24 @@ def video_search(request):
 
 
 #delete video
-class DeleteVideo(generic.DeleteView):
+class DeleteVideo(LoginRequiredMixin, generic.DeleteView): #for class based view for login_required instance of using @annotation must use LoginRequiredMixin
     model = Video
     template_name = 'halls/delete_video.html'
     success_url = reverse_lazy('dashboard')
+
+    #get the video for current user 
+    def get_object(self):
+        video = super(DeleteVideo, self).get_object()
+        if not video.hall.user == self.request.user: #if the user did not own the video 
+            raise Http404 #return 404
+        return video #else return video and give permission to delete
 
 
 
 #class based view for SignUp
 class SignUp(generic.CreateView):
     form_class = UserCreationForm
-    success_url = reverse_lazy('home') #if successful SignUp redirect to home page
+    success_url = reverse_lazy('dashboard') #if successful SignUp redirect to home page
     template_name = 'registration/signup.html'
 
     '''
@@ -102,7 +115,7 @@ class SignUp(generic.CreateView):
 
 #CRUD of Hall
 #class based view for CreateHall - C
-class CreateHall(generic.CreateView):
+class CreateHall(LoginRequiredMixin, generic.CreateView):
     model = Hall #use Hall model
     fields = ['title']  #in Hall model only have one field
     template_name = 'halls/create_hall.html'  #go to the template that have form
@@ -122,14 +135,28 @@ class DetailHall(generic.DeleteView):
     template_name = 'halls/detail_hall.html'
 
 #class based view for UpdateHall - U
-class UpdateHall(generic.UpdateView):
+class UpdateHall(LoginRequiredMixin, generic.UpdateView):
     model = Hall #passed the Hall object to template
     template_name = 'halls/update_hall.html'
     fields = ['title']  #field that want to update
     success_url = reverse_lazy('dashboard')  #after updated successfully redirect back to dashboard
 
+    #get the hall for current user 
+    def get_object(self):
+        hall = super(UpdateHall, self).get_object()
+        if not hall.user == self.request.user: #if the user did not own the hall
+            raise Http404 #return 404
+        return hall #else return hall and give permission to update
+
 #class based view for DeleteHall - D
-class DeleteHall(generic.DeleteView):
+class DeleteHall(LoginRequiredMixin, generic.DeleteView):
     model = Hall #passed the Hall object to template
     template_name = 'halls/delete_hall.html'
     success_url = reverse_lazy('dashboard') #after successfully deleted redirect back to dashboard
+
+    #get the hall for current user 
+    def get_object(self):
+        hall = super(DeleteHall, self).get_object()
+        if not hall.user == self.request.user: #if the user did not own the hall
+            raise Http404 #return 404
+        return hall #else return hall and give permission to delete
